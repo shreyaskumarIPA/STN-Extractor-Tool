@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STN Extractor Tool</title>
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <style>
+    :root {
+      --ipa-charcoal:#1D252C;
+      --ipa-purple:#5D2067;
+      --ipa-web-teal:#30AEB6;
+      --ipa-light-grey:#E5E8EC;
+      --ipa-white:#FFFFFF;
+      --bg:#f4f5f7;
+      --panel:#ffffff;
+      --panel-soft:#fbfbfc;
+      --border:#dfe4ea;
+      --border-strong:#c8d0d9;
+      --left-pane-width:50%;
+
+      /* Corporate colours aligned to the supplied table */
+      --ipa-digital-mint:#84C98F;
+      --ipa-web-mint:#84C98F;
+      --ipa-digital-yellow:#F1AC1E;
+      --ipa-web-orange:#F1AC1E;
+      --ipa-web-violet:#704579;
+      --ipa-web-red:#DE4326;
+
+      --patents-accent:#30AEB6;
+      --medline-accent:#84C98F;
+      --embase-accent:#1D252C;
+      --wpids-accent:#F1AC1E;
+    }
+
+    * { box-sizing:border-box; }
+    html, body { height:100%; }
+    body {
+      margin:0;
+      font-family:Segoe UI, Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--ipa-charcoal);
+      font-size:13px;
+      line-height:1.28;
+    }
+
+    .top-banner {
+      position:sticky;
+      top:0;
+      z-index:1000;
+      background:var(--ipa-charcoal);
+      color:#fff;
+      padding:4px 6px 4px 12px;
+      border-bottom:3px solid rgba(0,0,0,.1);
+      box-shadow:0 2px 10px rgba(0,0,0,.08);
+    }
+
+    .banner-inner {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      min-height:40px;
+    }
+
+    .banner-title {
+      flex:1;
+      min-width:0;
+      padding-right:4px;
+    }
+
+    .top-banner h1 {
+      margin:0;
+      font-size:17px;
+      letter-spacing:.2px;
+    }
+
+    .top-banner .sub {
+      margin:1px 0 0;
+      font-size:12px;
+      opacity:.94;
+      max-width:1180px;
+    }
+
+    .banner-right {
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
+      flex:0 0 auto;
+      margin:0;
+      padding:0;
+      line-height:0;
+    }
+
+    .p-focus-logo {
+      height:36px;
+      width:72px;
+      max-width:144px;
+      display:block;
+      margin:0;
+      padding:0;
+      border:none;
+      background:transparent;
+      object-fit:contain;
+      object-position:center;
+      flex:0 0 auto;
+      align-self:center;
+    }
+
+    .gov-logo {
+      width:160px;
+      height:auto;
+      display:block;
+      margin:0;
+      padding:0;
+      flex:0 0 auto;
+    }
+
+    .main-area {
+      width:100%;
+      max-width:none;
+      margin:0;
+      padding:8px 8px 14px;
+    }
+
+    .workspace-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:8px;
+      flex-wrap:wrap;
+    }
+
+    .workspace-title {
+      font-size:18px;
+      font-weight:700;
+      color:#355062;
+    }
+
+    .workspace-tools {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .workspace-chip {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:10px;
+      padding:5px 10px;
+      font-size:11.5px;
+      color:#516370;
+    }
+
+    .board-card {
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:10px;
+      box-shadow:0 1px 0 rgba(0,0,0,.02);
+      overflow:hidden;
+    }
+
+    .board-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:8px 10px;
+      border-bottom:1px solid var(--border);
+      background:#fff;
+      flex-wrap:wrap;
+    }
+
+    .board-title {
+      font-size:13px;
+      font-weight:700;
+      color:var(--ipa-web-teal);
+    }
+
+    .board-meta {
+      font-size:11.5px;
+      font-style:italic;
+      color:#7a8792;
+    }
+
+    .board-body { padding:8px; }
+
+    .intro-grid {
+      display:grid;
+      grid-template-columns:minmax(0,1.35fr) minmax(260px,.9fr);
+      gap:8px;
+      align-items:start;
+      margin-bottom:8px;
+    }
+
+    .intro-card, .tips-card, .panel-card {
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fbfcfd;
+      overflow:hidden;
+    }
+
+    .intro-card .head, .tips-card .head, .panel-card .head {
+      padding:6px 9px;
+      border-bottom:1px solid var(--border);
+      background:#f4f8fa;
+      font-weight:700;
+      font-size:12px;
+      color:#38515f;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .intro-card .body, .tips-card .body, .panel-card .body { padding:7px 9px; }
+    .intro-card ul, .tips-card ul { margin:0; padding-left:16px; }
+    .intro-card li, .tips-card li { margin:4px 0; }
+
+    .toggle-summary {
+      cursor:pointer;
+      list-style:none;
+    }
+    .toggle-summary::-webkit-details-marker { display:none; }
+    .toggle-arrow {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      border:1px solid rgba(29,37,44,.18);
+      background:#fff;
+      font-size:11px;
+      transition:transform .15s ease;
+      flex:0 0 auto;
+    }
+    details[open] .toggle-arrow { transform:rotate(90deg); }
+
+    .io-split {
+      display:flex;
+      align-items:stretch;
+      gap:0;
+      width:100%;
+      min-width:0;
+    }
+
+    .split-pane { min-width:0; }
+    .split-pane.input-pane {
+      flex:0 0 var(--left-pane-width);
+      min-width:280px;
+    }
+    .split-pane.output-pane {
+      flex:1 1 auto;
+      min-width:280px;
+    }
+
+    .split-divider {
+      position:relative;
+      width:8px;
+      min-width:8px;
+      flex:0 0 8px;
+      cursor:col-resize;
+      user-select:none;
+      touch-action:none;
+      margin:0 6px;
+      border-radius:8px;
+      background:transparent;
+    }
+    .split-divider:hover { background:#e1e8f0; }
+    .split-divider::after {
+      content:"";
+      position:absolute;
+      top:0;
+      bottom:0;
+      left:50%;
+      width:2px;
+      transform:translateX(-50%);
+      background:#d9e2ec;
+      border-radius:999px;
+    }
+    .divider-indicator {
+      position:absolute;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+      background:rgba(29,37,44,.92);
+      color:#fff;
+      font-size:11px;
+      padding:3px 6px;
+      border-radius:8px;
+      white-space:nowrap;
+      display:none;
+      pointer-events:none;
+      z-index:2;
+    }
+
+    .output-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      align-content:start;
+    }
+
+    textarea {
+      width:100%;
+      min-height:280px;
+      padding:8px 9px;
+      border:1px solid var(--border-strong);
+      border-radius:8px;
+      background:#fff;
+      resize:vertical;
+      outline:none;
+      font:inherit;
+      line-height:1.28;
+    }
+    textarea:focus {
+      border-color:#8dc7d4;
+      box-shadow:0 0 0 3px rgba(48,174,182,.12);
+    }
+
+    .input-textarea {
+      min-height:650px;
+      font-family:Consolas, "Courier New", monospace;
+      font-size:12.5px;
+      white-space:pre;
+      overflow-wrap:normal;
+      tab-size:8;
+      line-height:1.04;
+    }
+
+    .output-textarea {
+      min-height:250px;
+      background:var(--panel-soft);
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12.5px;
+    }
+
+    .input-head,
+    .output-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      flex-wrap:wrap;
+      width:100%;
+    }
+
+    .title-wrap {
+      display:flex;
+      align-items:center;
+      gap:7px;
+      min-width:0;
+      flex-wrap:wrap;
+    }
+
+    .input-actions {
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .upload-input {
+      position:absolute;
+      left:-9999px;
+      width:1px;
+      height:1px;
+      opacity:0;
+      pointer-events:none;
+    }
+
+    .upload-label, .copy-btn, .paste-hint {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      min-height:24px;
+      padding:2px 8px;
+      border-radius:999px;
+      font:inherit;
+      font-size:11px;
+      line-height:1.15;
+      font-weight:700;
+      white-space:nowrap;
+      border:1px solid transparent;
+    }
+
+    .upload-label, .copy-btn { cursor:pointer; transition:background .14s ease, border-color .14s ease, color .14s ease, transform .08s ease; }
+    .upload-label:active, .copy-btn:active { transform:translateY(1px); }
+
+    .upload-label, .paste-hint {
+      border-color:rgba(48,174,182,.22);
+      background:rgba(48,174,182,.08);
+      color:var(--ipa-web-teal);
+    }
+    .upload-label:hover { background:rgba(48,174,182,.14); }
+
+    .title-pill {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:24px;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
+      line-height:1.15;
+      border:1px solid transparent;
+    }
+
+    .title-pill.patents,
+    .copy-btn.patents {
+      color:var(--ipa-web-teal);
+      background:rgba(48,174,182,.12);
+      border-color:rgba(48,174,182,.28);
+    }
+    .copy-btn.patents:hover { background:rgba(48,174,182,.18); }
+
+    .title-pill.medline,
+    .copy-btn.medline {
+      color:#3d6c43;
+      background:rgba(132,201,143,.18);
+      border-color:rgba(132,201,143,.36);
+    }
+    .copy-btn.medline:hover { background:rgba(132,201,143,.26); }
+
+    .title-pill.embase,
+    .copy-btn.embase {
+      color:var(--ipa-charcoal);
+      background:rgba(29,37,44,.06);
+      border-color:rgba(29,37,44,.16);
+    }
+    .copy-btn.embase:hover { background:rgba(29,37,44,.10); }
+
+    .title-pill.wpids,
+    .copy-btn.wpids {
+      color:#8a5a00;
+      background:rgba(241,172,30,.16);
+      border-color:rgba(241,172,30,.34);
+    }
+    .copy-btn.wpids:hover { background:rgba(241,172,30,.24); }
+
+    .copy-btn.copied {
+      color:#3d6c43;
+      background:rgba(132,201,143,.18);
+      border-color:rgba(132,201,143,.36);
+    }
+
+    .file-status {
+      font-size:11px;
+      color:#6a7680;
+      white-space:nowrap;
+      max-width:260px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .panel-card.patents > .head { border-top:3px solid var(--patents-accent); }
+    .panel-card.medline > .head { border-top:3px solid var(--medline-accent); }
+    .panel-card.embase > .head { border-top:3px solid var(--embase-accent); }
+    .panel-card.wpids > .head { border-top:3px solid var(--wpids-accent); }
+
+    .compliance-banner {
+      border:1px solid rgba(241,172,30,.36);
+      background:rgba(241,172,30,.12);
+      padding:8px 10px;
+      font-size:11.5px;
+      font-style:italic;
+      border-radius:8px;
+      margin-top:8px;
+      color:#6c4a00;
+    }
+
+    .footer-note {
+      margin-top:8px;
+      color:#5d6b74;
+      font-size:11.5px;
+      text-align:right;
+    }
+
+    .badge-row {
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      font-size:11px;
+      padding:2px 7px;
+      border-radius:999px;
+      border:1px solid rgba(29,37,44,.14);
+      background:#f4f7f9;
+      color:#42505a;
+      line-height:1.15;
+    }
+
+    .badge.section {
+      border-color:rgba(48,174,182,.25);
+      background:rgba(48,174,182,.08);
+    }
+
+    @media (max-width:1200px) {
+      .intro-grid,
+      .output-grid {
+        grid-template-columns:1fr;
+      }
+      .io-split {
+        flex-direction:column;
+      }
+      .split-pane.input-pane,
+      .split-pane.output-pane {
+        flex:1 1 auto;
+        min-width:0;
+      }
+      .split-divider { display:none; }
+      .input-textarea { min-height:380px; }
+    }
+
+    @media (max-width:900px) {
+      .top-banner { padding:4px 4px 4px 10px; }
+      .banner-inner { min-height:38px; gap:5px; }
+      .p-focus-logo { height:28px; width:56px; max-width:96px; }
+      .gov-logo { width:112px; }
+      .main-area { padding:8px; }
+      .file-status { max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-banner">
+    <div class="banner-inner">
+      <div class="banner-title">
+        <h1>STN Extractor Tool</h1>
+        <div class="sub">Extract patent publication numbers from supported STN fields and format jurisdiction specific output suitable to be copied and pasted to EPO AbS, together with Medline identifiers, Embase PMID derived identifiers, and WPIDS accession numbers.</div>
+      </div>
+      <div class="banner-right">
+        <img class="p-focus-logo" src="./p focus.png" alt="P Focus icon" />
+        <img class="gov-logo" src="./IP Aust_inline_white_95pxhigh.png" alt="IP Australia" />
+      </div>
+    </div>
+  </div>
+
+  <main class="main-area">
+    <div class="workspace-head">
+      <div class="workspace-title">Transcript extraction workspace</div>
+      <div class="workspace-tools">
+        <span class="workspace-chip">Version 6.1.2</span>
+      </div>
+    </div>
+
+    <section class="board-card">
+      <div class="board-head">
+        <div class="board-title">STN transcript parser</div>
+        <div class="board-meta">Paste transcript text on the left. Outputs refresh automatically as you type.</div>
+      </div>
+      <div class="board-body">
+        <div class="intro-grid">
+          <details class="intro-card">
+            <summary class="head toggle-summary">
+              <span>What this tool does</span>
+              <span class="toggle-arrow">▶</span>
+            </summary>
+            <div class="body">
+              <ul>
+                <li>Extracts patent publication numbers from supported STN fields and formats jurisdiction specific output suitable to be copied and pasted to EPO AbS.</li>
+                <li>Extracts PubMed identifiers for Medline and Embase output blocks.</li>
+                <li>Extracts WPIDS accession numbers and formats them for STN search syntax.</li>
+                <li>Preserves the original extraction logic and live update behaviour from the source tool.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="tips-card">
+            <summary class="head toggle-summary">
+              <span>Output panels</span>
+              <span class="toggle-arrow">▶</span>
+            </summary>
+            <div class="body">
+              <div class="badge-row" style="margin-bottom:8px;">
+                <span class="badge section">Patents-EPO AbS</span>
+                <span class="badge section">Medline</span>
+                <span class="badge section">Embase</span>
+                <span class="badge section">WPIDS</span>
+              </div>
+              <ul>
+                <li>Outputs are produced in STN-ready bracketed syntax.</li>
+                <li>Patent results are de-duplicated and sorted for readability.</li>
+                <li>Each output panel includes a compact one-click copy to clipboard control.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+
+        <div class="io-split" id="ioSplit">
+          <div class="split-pane input-pane" id="inputPane">
+            <div class="panel-card">
+              <div class="head">
+                <div class="input-head">
+                  <span>Input transcript</span>
+                  <div class="input-actions">
+                    <label for="transcriptFileInput" class="upload-label">Upload STN transcript</label>
+                    <input id="transcriptFileInput" class="upload-input" type="file" accept=".rtf,.docx,application/rtf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                    <span class="paste-hint">or paste directly below</span>
+                    <span id="fileStatus" class="file-status">RTF or DOCX</span>
+                  </div>
+                </div>
+              </div>
+              <div class="body">
+                <textarea id="trn_ta" class="input-textarea" placeholder="Paste STN transcript here"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="split-divider" id="splitDivider" title="Drag to resize. Double-click to reset.">
+            <div class="divider-indicator" id="dividerIndicator"></div>
+          </div>
+
+          <div class="split-pane output-pane" id="outputPane">
+            <div class="output-grid">
+              <div class="panel-card patents">
+                <div class="head">
+                  <div class="output-head">
+                    <div class="title-wrap">
+                      <span>Patents-EPO AbS</span>
+                      <span class="title-pill patents">EPO-ready</span>
+                    </div>
+                    <button type="button" class="copy-btn patents" data-copy-target="patents_ta">Copy</button>
+                  </div>
+                </div>
+                <div class="body">
+                  <textarea id="patents_ta" class="output-textarea" placeholder="Patents-EPO AbS" readonly></textarea>
+                </div>
+              </div>
+
+              <div class="panel-card medline">
+                <div class="head">
+                  <div class="output-head">
+                    <div class="title-wrap">
+                      <span>Medline</span>
+                      <span class="title-pill medline">NLM</span>
+                    </div>
+                    <button type="button" class="copy-btn medline" data-copy-target="medline_ta">Copy</button>
+                  </div>
+                </div>
+                <div class="body">
+                  <textarea id="medline_ta" class="output-textarea" placeholder="Medline" readonly></textarea>
+                </div>
+              </div>
+
+              <div class="panel-card embase">
+                <div class="head">
+                  <div class="output-head">
+                    <div class="title-wrap">
+                      <span>Embase</span>
+                      <span class="title-pill embase">PMID</span>
+                    </div>
+                    <button type="button" class="copy-btn embase" data-copy-target="embase_ta">Copy</button>
+                  </div>
+                </div>
+                <div class="body">
+                  <textarea id="embase_ta" class="output-textarea" placeholder="Embase (SUBSET!)" readonly></textarea>
+                </div>
+              </div>
+
+              <div class="panel-card wpids">
+                <div class="head">
+                  <div class="output-head">
+                    <div class="title-wrap">
+                      <span>WPIDS</span>
+                      <span class="title-pill wpids">AN</span>
+                    </div>
+                    <button type="button" class="copy-btn wpids" data-copy-target="wpids_ta">Copy</button>
+                  </div>
+                </div>
+                <div class="body">
+                  <textarea id="wpids_ta" class="output-textarea" placeholder="WPIDS" readonly></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="compliance-banner">
+          <strong>Note</strong><br>
+          This build updates the presentation layer only. The extraction patterns, formatting rules, auto-update behaviour and output syntax are preserved from the original extractor logic.
+        </div>
+
+        <div class="footer-note">© 2026 Andrew Bryce. All rights reserved.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    function extract_patents(string) {
+      const validCC = '(?:AR|AT|AU|BR|CA|CN|DE|EP|ES|FI|GB|HK|IL|IN|IT|JP|KR|MX|US|WO|ZA)';
+      const CAplus_PI_field = new RegExp('^(?:PI|PIA|PN|PPPI|PSPI)? *(' + validCC + ') *(\\d{5,}) *([A-Z]\\d?)\\b', 'gmu');
+      // Requires a kind code, so that priority docs are ignored.
+      // Also extracts WPIDS patents from PIA-style lines.
+      const Registry_CN_field = new RegExp('PN: *(' + validCC + ') *(\\d{5,}) *([A-Z]\\d?)?\\b', 'gu');
+      // Restrict to recognised patent jurisdiction codes and require at least 5 digits
+      // so STN field codes such as AN, DN, CS, EM and GN are not captured.
+      const Registry_PNTE_field = new RegExp('\| *(' + validCC + ') *(\\d{5,}) *([A-Z]\\d?)?\\b', 'gu');
+      const a = [...string.matchAll(CAplus_PI_field)].map(format);
+      const b = [...string.matchAll(Registry_CN_field)].map(format);
+      const c = [...string.matchAll(Registry_PNTE_field)].map(format);
+      return [...new Set([...a, ...b, ...c])].sort();
+    }
+
+    function extract_medline(string) {
+      const regex = /PubMed ID: (\d+)/g;
+      return [...string.matchAll(regex)].map(e => "NLM" + e[1]);
+    }
+
+    function extract_embase_pmid(string) {
+      const regex = /PMID: (\d+)/g;
+      return [...string.matchAll(regex)].map(e => "NLM" + e[1]);
+    }
+
+    function extract_wpids(string) {
+      const regex = /^AN *([A-Z\d]+\-[A-Z\d]+).*?WPIDS/gm;
+      return [...string.matchAll(regex)].map(e => '"' + e[1] + '"').sort();
+    }
+
+    function US(cc, num, kind) {
+      if (kind !== undefined && kind[0] === "A" && num.length === 11) {
+        return cc + num.slice(0, 4) + num.slice(-6);
+      }
+      return cc + num + (kind ?? "");
+    }
+
+    function KR(cc, num, kind) {
+      if (kind !== undefined && kind[0] === "A") {
+        return cc + num.slice(0, 4) + "0" + num.slice(4);
+      }
+      return cc + num + (kind ?? "");
+    }
+
+    function JP(cc, num, kind) {
+      if (kind !== undefined && kind[0] === "A") {
+        if (num.length === 10) {
+          return cc + num + kind;
+        }
+        return cc + "[S,H,]" + num + kind;
+      }
+      return cc + num;
+    }
+
+    function WO(cc, num, kind) {
+      const re = /(\d\d)(\d\d)0(\d+)/;
+      const match = re.exec(num);
+      if (match === null) {
+        return cc + num;
+      }
+      return cc + "[" + match[1] + ",]" + match[2] + "[0,]" + match[3];
+    }
+
+    function ZA(cc, num, kind) {
+      const re = /(\d\d\d\d)0(\d+)/;
+      const match = re.exec(num);
+      if (match === null) {
+        return cc + num;
+      }
+      return cc + match[1] + match[2];
+    }
+
+    const formatters = { JP, KR, US, WO, ZA };
+
+    function format(match) {
+      const [all, cc, num, kind] = match;
+      if (formatters[cc] !== undefined) {
+        return formatters[cc](cc, num, kind);
+      }
+      return cc + num;
+    }
+
+    const trn_ta = document.getElementById("trn_ta");
+    const patents_ta = document.getElementById("patents_ta");
+    const medline_ta = document.getElementById("medline_ta");
+    const embase_ta = document.getElementById("embase_ta");
+    const wpids_ta = document.getElementById("wpids_ta");
+    const transcriptFileInput = document.getElementById("transcriptFileInput");
+    const fileStatus = document.getElementById("fileStatus");
+
+    function refreshOutputs() {
+      const str = trn_ta.value;
+      patents_ta.value = "(\n" + extract_patents(str).join(",\n") + "\n)/pn";
+      medline_ta.value = "(\n" + extract_medline(str).join(",\n") + "\n)/an@npl";
+      embase_ta.value = "(\n" + extract_embase_pmid(str).join(",\n") + "\n)/an@npl";
+      wpids_ta.value = "(\n" + extract_wpids(str).join(",\n") + "\n)/an@wpi";
+    }
+
+    trn_ta.addEventListener("input", refreshOutputs);
+
+    async function copyTextFrom(id, button) {
+      const target = document.getElementById(id);
+      if (!target) return;
+      const text = target.value || "";
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        target.removeAttribute('readonly');
+        target.select();
+        document.execCommand('copy');
+        target.setAttribute('readonly', 'readonly');
+        window.getSelection().removeAllRanges();
+      }
+      const original = button.textContent;
+      button.textContent = 'Copied';
+      button.classList.add('copied');
+      window.setTimeout(function () {
+        button.textContent = original;
+        button.classList.remove('copied');
+      }, 1400);
+    }
+
+    document.querySelectorAll('[data-copy-target]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        copyTextFrom(btn.getAttribute('data-copy-target'), btn);
+      });
+    });
+
+    function cp1252CharFromHex(hex) {
+      const code = parseInt(hex, 16);
+      const cp1252Map = {
+        128: 8364, 130: 8218, 131: 402, 132: 8222, 133: 8230, 134: 8224, 135: 8225,
+        136: 710, 137: 8240, 138: 352, 139: 8249, 140: 338, 142: 381, 145: 8216,
+        146: 8217, 147: 8220, 148: 8221, 149: 8226, 150: 8211, 151: 8212, 152: 732,
+        153: 8482, 154: 353, 155: 8250, 156: 339, 158: 382, 159: 376
+      };
+      const uni = cp1252Map[code] || code;
+      return String.fromCharCode(uni);
+    }
+
+    function normalizeExtractedText(text) {
+      let s = String(text || '').replace(/\r\n?/g, '\n');
+      s = s.replace(/\u00a0/g, ' ');
+      const lines = s.split('\n').map(function (line) {
+        return line.replace(/[ \t]+$/g, '');
+      });
+      return lines.join('\n').trim();
+    }
+
+    function compactBlankLines(text) {
+      let s = String(text || '');
+      s = s.replace(/\n(?:[ \t]*\n)+/g, '\n');
+      return s;
+    }
+
+    function rtfToPlainTextPreserveLayout(rtf) {
+      const src = String(rtf || '').replace(/\r\n?/g, '\n');
+      const stack = [];
+      let state = {
+        ignorable: false,
+        skipDestination: false,
+        ucSkip: 1
+      };
+      let out = [];
+      let i = 0;
+      let pendingSkip = 0;
+      let afterBackslashAsterisk = false;
+      const destinationWords = new Set([
+        'fonttbl','colortbl','stylesheet','info','pict','object','header','footer','headerl','headerr',
+        'footerl','footerr','footnote','annotation','datastore','themedata','xmlnstbl','filetbl','listtable',
+        'listoverridetable','rsidtbl','generator','private','revtbl','latentstyles','mmathpr','pnseclvl',
+        'pntext','fldinst','fldrslt'
+      ]);
+      const specials = {
+        emdash: '—',
+        endash: '–',
+        bullet: '•',
+        lquote: '‘',
+        rquote: '’',
+        ldblquote: '“',
+        rdblquote: '”'
+      };
+
+      function currentVisible() {
+        return !state.ignorable && !state.skipDestination;
+      }
+
+      while (i < src.length) {
+        const ch = src[i];
+
+        if (ch === '{') {
+          stack.push({ ...state });
+          i += 1;
+          continue;
+        }
+
+        if (ch === '}') {
+          state = stack.length ? stack.pop() : { ignorable: false, skipDestination: false, ucSkip: 1 };
+          afterBackslashAsterisk = false;
+          pendingSkip = 0;
+          i += 1;
+          continue;
+        }
+
+        if (ch === '\\') {
+          i += 1;
+          if (i >= src.length) break;
+          const next = src[i];
+
+          if (next === '\\' || next === '{' || next === '}') {
+            if (currentVisible()) out.push(next);
+            i += 1;
+            continue;
+          }
+
+          if (next === '*') {
+            afterBackslashAsterisk = true;
+            i += 1;
+            continue;
+          }
+
+          if (next === '\n' || next === '\r') {
+            i += 1;
+            continue;
+          }
+
+          if (next === "'") {
+            const hex = src.slice(i + 1, i + 3);
+            if (/^[0-9a-fA-F]{2}$/.test(hex)) {
+              if (pendingSkip > 0) {
+                pendingSkip -= 1;
+              } else if (currentVisible()) {
+                out.push(cp1252CharFromHex(hex));
+              }
+              i += 3;
+              continue;
+            }
+          }
+
+          let j = i;
+          while (j < src.length && /[A-Za-z]/.test(src[j])) j += 1;
+          let word = src.slice(i, j);
+          let sign = 1;
+          if (src[j] === '-') {
+            sign = -1;
+            j += 1;
+          }
+          let numStart = j;
+          while (j < src.length && /\d/.test(src[j])) j += 1;
+          const hasNum = j > numStart;
+          const num = hasNum ? sign * parseInt(src.slice(numStart, j), 10) : null;
+          if (src[j] === ' ') j += 1;
+          i = j;
+
+          if (!word) {
+            continue;
+          }
+
+          if (afterBackslashAsterisk && destinationWords.has(word)) {
+            state.ignorable = true;
+            state.skipDestination = true;
+            afterBackslashAsterisk = false;
+            continue;
+          }
+          afterBackslashAsterisk = false;
+
+          if (destinationWords.has(word)) {
+            state.skipDestination = true;
+            continue;
+          }
+
+          if (word === 'par' || word === 'line') {
+            if (currentVisible()) out.push('\n');
+            pendingSkip = 0;
+            continue;
+          }
+          if (word === 'tab') {
+            if (currentVisible()) out.push('\t');
+            pendingSkip = 0;
+            continue;
+          }
+          if (word === 'uc' && hasNum) {
+            state.ucSkip = num;
+            continue;
+          }
+          if (word === 'u' && hasNum) {
+            let code = num;
+            if (code < 0) code += 65536;
+            if (currentVisible()) out.push(String.fromCharCode(code));
+            pendingSkip = state.ucSkip;
+            continue;
+          }
+          if (specials[word]) {
+            if (currentVisible()) out.push(specials[word]);
+            continue;
+          }
+          if (word === '~') {
+            if (currentVisible()) out.push(' ');
+            continue;
+          }
+          continue;
+        }
+
+        if (pendingSkip > 0) {
+          pendingSkip -= 1;
+          i += 1;
+          continue;
+        }
+
+        if (currentVisible()) {
+          out.push(ch);
+        }
+        i += 1;
+      }
+
+      return compactBlankLines(normalizeExtractedText(out.join('')));
+    }
+
+    function getUint16(view, offset) {
+      return view.getUint16(offset, true);
+    }
+
+    function getUint32(view, offset) {
+      return view.getUint32(offset, true);
+    }
+
+    async function unzipDocxEntry(arrayBuffer, entryName) {
+      const view = new DataView(arrayBuffer);
+      const bytes = new Uint8Array(arrayBuffer);
+      const EOCD_SIG = 0x06054b50;
+      const CEN_SIG = 0x02014b50;
+      const LOC_SIG = 0x04034b50;
+      let eocdOffset = -1;
+      for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
+        if (getUint32(view, i) === EOCD_SIG) {
+          eocdOffset = i;
+          break;
+        }
+      }
+      if (eocdOffset < 0) throw new Error('DOCX zip end record not found');
+      const totalEntries = getUint16(view, eocdOffset + 10);
+      const centralDirOffset = getUint32(view, eocdOffset + 16);
+      let ptr = centralDirOffset;
+      for (let i = 0; i < totalEntries; i++) {
+        if (getUint32(view, ptr) !== CEN_SIG) throw new Error('DOCX central directory is invalid');
+        const compression = getUint16(view, ptr + 10);
+        const compressedSize = getUint32(view, ptr + 20);
+        const fileNameLen = getUint16(view, ptr + 28);
+        const extraLen = getUint16(view, ptr + 30);
+        const commentLen = getUint16(view, ptr + 32);
+        const localHeaderOffset = getUint32(view, ptr + 42);
+        const nameBytes = bytes.slice(ptr + 46, ptr + 46 + fileNameLen);
+        const name = new TextDecoder('utf-8').decode(nameBytes);
+        if (name === entryName) {
+          if (getUint32(view, localHeaderOffset) !== LOC_SIG) throw new Error('DOCX local entry is invalid');
+          const localNameLen = getUint16(view, localHeaderOffset + 26);
+          const localExtraLen = getUint16(view, localHeaderOffset + 28);
+          const dataStart = localHeaderOffset + 30 + localNameLen + localExtraLen;
+          const compressed = bytes.slice(dataStart, dataStart + compressedSize);
+          if (compression === 0) {
+            return compressed;
+          }
+          if (compression === 8) {
+            if (typeof DecompressionStream !== 'undefined') {
+              const ds = new DecompressionStream('deflate-raw');
+              const blob = new Blob([compressed]);
+              const stream = blob.stream().pipeThrough(ds);
+              const result = await new Response(stream).arrayBuffer();
+              return new Uint8Array(result);
+            }
+            throw new Error('This browser does not support DOCX decompression');
+          }
+          throw new Error('Unsupported DOCX compression method: ' + compression);
+        }
+        ptr += 46 + fileNameLen + extraLen + commentLen;
+      }
+      throw new Error('DOCX content file not found');
+    }
+
+    function xmlToPlainText(xmlString) {
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlString, 'application/xml');
+      const blocks = [];
+      const paragraphs = Array.from(xml.getElementsByTagName('w:p'));
+      if (paragraphs.length) {
+        paragraphs.forEach(function (p) {
+          const parts = [];
+          Array.from(p.childNodes).forEach(function walk(node) {
+            if (!node) return;
+            if (node.nodeType === 1 && node.nodeName === 'w:t') {
+              parts.push(node.textContent || '');
+              return;
+            }
+            if (node.nodeType === 1 && node.nodeName === 'w:tab') {
+              parts.push('\t');
+              return;
+            }
+            if (node.nodeType === 1 && node.nodeName === 'w:br') {
+              parts.push('\n');
+              return;
+            }
+            Array.from(node.childNodes || []).forEach(walk);
+          });
+          blocks.push(parts.join(''));
+        });
+      } else {
+        blocks.push(xml.documentElement ? (xml.documentElement.textContent || '') : '');
+      }
+      return compactBlankLines(normalizeExtractedText(blocks.join('\n')));
+    }
+
+    async function extractDocxText(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const entry = await unzipDocxEntry(arrayBuffer, 'word/document.xml');
+      const xml = new TextDecoder('utf-8').decode(entry);
+      return xmlToPlainText(xml);
+    }
+
+    async function extractRtfText(file) {
+      const text = await file.text();
+      return rtfToPlainTextPreserveLayout(text);
+    }
+
+    async function loadTranscriptFromFile(file) {
+      const name = (file && file.name ? file.name : '').toLowerCase();
+      if (name.endsWith('.rtf')) {
+        return extractRtfText(file);
+      }
+      if (name.endsWith('.docx')) {
+        return extractDocxText(file);
+      }
+      throw new Error('Unsupported file type. Use RTF or DOCX');
+    }
+
+    transcriptFileInput.addEventListener('change', async function () {
+      const file = transcriptFileInput.files && transcriptFileInput.files[0];
+      if (!file) return;
+      fileStatus.textContent = file.name;
+      try {
+        const extracted = await loadTranscriptFromFile(file);
+        trn_ta.value = extracted;
+        refreshOutputs();
+        fileStatus.textContent = file.name + ' loaded';
+      } catch (err) {
+        fileStatus.textContent = 'Could not load file';
+        alert('Could not extract the transcript from this file. ' + String(err && err.message ? err.message : err));
+      }
+    });
+
+    (function initSplitControls() {
+      const root = document.documentElement;
+      const split = document.getElementById('ioSplit');
+      const divider = document.getElementById('splitDivider');
+      const indicator = document.getElementById('dividerIndicator');
+      const inputPane = document.getElementById('inputPane');
+      if (!split || !divider || !indicator || !inputPane) return;
+
+      const MIN_LEFT = 280;
+      const MIN_RIGHT = 280;
+      const DIVIDER_TOTAL = 20;
+      let dragging = false;
+      let startX = 0;
+      let startWidth = 0;
+
+      function setLeftWidth(widthPx) {
+        const total = split.getBoundingClientRect().width;
+        const maxLeft = Math.max(MIN_LEFT, total - MIN_RIGHT - DIVIDER_TOTAL);
+        const clamped = Math.max(MIN_LEFT, Math.min(maxLeft, widthPx));
+        root.style.setProperty('--left-pane-width', clamped + 'px');
+        const pct = total > 0 ? Math.round((clamped / total) * 100) : 50;
+        indicator.textContent = pct + '%';
+      }
+
+      function setLeftHalf() {
+        const total = split.getBoundingClientRect().width;
+        const target = Math.max(MIN_LEFT, Math.min(total - MIN_RIGHT - DIVIDER_TOTAL, (total - DIVIDER_TOTAL) / 2));
+        setLeftWidth(target);
+      }
+
+      function startDrag(clientX) {
+        dragging = true;
+        startX = clientX;
+        startWidth = inputPane.getBoundingClientRect().width;
+        indicator.style.display = 'block';
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+      }
+
+      function moveDrag(clientX) {
+        if (!dragging) return;
+        const dx = clientX - startX;
+        setLeftWidth(startWidth + dx);
+      }
+
+      function stopDrag() {
+        if (!dragging) return;
+        dragging = false;
+        indicator.style.display = 'none';
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+
+      divider.addEventListener('mousedown', function (e) {
+        if (window.matchMedia && window.matchMedia('(max-width:1200px)').matches) return;
+        e.preventDefault();
+        startDrag(e.clientX);
+      });
+
+      document.addEventListener('mousemove', function (e) { moveDrag(e.clientX); });
+      document.addEventListener('mouseup', function () { stopDrag(); });
+
+      divider.addEventListener('touchstart', function (e) {
+        if (window.matchMedia && window.matchMedia('(max-width:1200px)').matches) return;
+        if (!e.touches || !e.touches.length) return;
+        startDrag(e.touches[0].clientX);
+      }, { passive: true });
+
+      document.addEventListener('touchmove', function (e) {
+        if (!dragging || !e.touches || !e.touches.length) return;
+        moveDrag(e.touches[0].clientX);
+      }, { passive: true });
+
+      document.addEventListener('touchend', function () { stopDrag(); }, { passive: true });
+
+      divider.addEventListener('dblclick', function () { setLeftHalf(); });
+
+      window.addEventListener('resize', function () {
+        if (window.matchMedia && window.matchMedia('(max-width:1200px)').matches) return;
+        const current = inputPane.getBoundingClientRect().width;
+        setLeftWidth(current);
+      });
+
+      setLeftHalf();
+    })();
+
+    refreshOutputs();
+  </script>
+</body>
+</html>
